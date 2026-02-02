@@ -8,6 +8,7 @@ const SHEET_RANGE = import.meta.env.VITE_SHEET_RANGE || "Лист1!A:N";
 const STATUS_WEBHOOK =
   import.meta.env.VITE_STATUS_WEBHOOK_URL || "https://pngstudio.app.n8n.cloud/webhook/e5f152ad-a8a5-4bc8-bc6a-c28e5d614d2a";
 
+const DONE_WEBHOOK = import.meta.env.VITE_DONE_WEBHOOK_URL || "https://pngstudio.app.n8n.cloud/webhook/3af025d2-b275-4f07-ab85-0ed8c41e15b7";
 const STATUS_TO_LABEL: Record<OrderStatus, string> = {
   incoming: "Запущено",
   "in-progress": "В роботі",
@@ -29,13 +30,15 @@ export async function updateOrderStatus({
     order,
   };
 
-  if (!STATUS_WEBHOOK) {
+  const targetWebhook = status === "done" ? DONE_WEBHOOK : STATUS_WEBHOOK;
+
+  if (!targetWebhook) {
     console.warn("STATUS_WEBHOOK not set; skipping remote update");
     return payload;
   }
 
   try {
-    await ky.post(STATUS_WEBHOOK, { json: payload, timeout: 8000 });
+    await ky.post(targetWebhook, { json: payload, timeout: 8000 });
   } catch (err) {
     console.error("Failed to update status via webhook", err);
   }
@@ -174,3 +177,4 @@ export async function fetchOrders(): Promise<Order[]> {
     return mockOrders;
   }
 }
+
